@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>High Flyer Data Collector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        #analysis, #prediction {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        #flightHistory {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <h1>High Flyer Game Data Collector</h1>
+
+    <div id="analysis">
+        <h2>Analyse :</h2>
+        <p>Les données d'analyse apparaîtront ici...</p>
+    </div>
+
+    <div id="prediction">
+        <h2>Prédiction :</h2>
+        <p>Les prédictions seront affichées ici...</p>
+    </div>
+
+    <div id="flightHistory">
+        <h2>Historique des Vols :</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Temps</th>
+                    <th>Multiplicateur</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les données d'historique seront insérées ici -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            const anomalyThreshold = 100; // Seuil pour les anomalies
+            let flightHistory = JSON.parse(localStorage.getItem('highFlyerFlightHistory')) || [];
+
+            function updateAnalysis(average, maxFlight, minFlight) {
+                const analysisDiv = document.getElementById('analysis');
+                analysisDiv.innerHTML = `
+                    <h2>Analyse :</h2>
+                    <p>Moyenne des 5 derniers vols : ${average.toFixed(2)}</p>
+                    <p>Vol Max : ${maxFlight}</p>
+                    <p>Vol Min : ${minFlight}</p>
+                `;
+            }
+
+            function updatePrediction(predictedNext) {
+                const predictionDiv = document.getElementById('prediction');
+                predictionDiv.innerHTML = `
+                    <h2>Prédiction :</h2>
+                    <p>Multiplicateur prévu : ${predictedNext.toFixed(2)}</p>
+                `;
+            }
+
+            function addFlightToHistory(multiplier) {
+                const currentTime = new Date().toLocaleTimeString();
+                flightHistory.push({ time: currentTime, multiplier });
+                localStorage.setItem('highFlyerFlightHistory', JSON.stringify(flightHistory));
+
+                const tbody = document.querySelector('#flightHistory tbody');
+                const row = `<tr><td>${currentTime}</td><td>${multiplier.toFixed(2)}</td></tr>`;
+                tbody.innerHTML = row + tbody.innerHTML;
+            }
+
+            function calculatePrediction() {
+                if (flightHistory.length < 5) {
+                    return Math.random() * 10; // Prédiction basique si l'historique est insuffisant
+                }
+                const lastFive = flightHistory.slice(-5).map(item => item.multiplier);
+                const average = lastFive.reduce((sum, value) => sum + value, 0) / lastFive.length;
+                return average + (Math.random() - 0.5); // Prédiction avec une petite variation
+            }
+
+            function simulateFlight() {
+                const multiplier = Math.random() * 30; // Génère un multiplicateur entre 0 et 30
+                addFlightToHistory(multiplier);
+
+                if (flightHistory.length >= 5) {
+                    const lastFive = flightHistory.slice(-5).map(item => item.multiplier);
+                    const average = lastFive.reduce((sum, value) => sum + value, 0) / lastFive.length;
+                    const maxFlight = Math.max(...lastFive);
+                    const minFlight = Math.min(...lastFive);
+
+                    updateAnalysis(average, maxFlight, minFlight);
+                    const predictedNext = calculatePrediction();
+                    updatePrediction(predictedNext);
+                }
+            }
+
+            // Simule un nouveau vol toutes les 5 secondes
+            setInterval(simulateFlight, 5000);
+        })();
+    </script>
+</body>
+</html>
